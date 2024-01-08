@@ -104,5 +104,49 @@ namespace Bloggie.Web.Controllers
 
             return View(null);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(EditBlogPostRequest editBlogPostRequest)
+        {
+            var blogPostDomainModel = new BlogPost
+            {
+                Id = editBlogPostRequest.Id,
+                Heading = editBlogPostRequest.Heading,
+                PageTittle = editBlogPostRequest.PageTittle,
+                Content = editBlogPostRequest.Content,
+                Author = editBlogPostRequest.Author,
+                ShortDescription = editBlogPostRequest.ShortDescription,
+                FeaturedImageUrl = editBlogPostRequest.FeaturedImageUrl,
+                PublishedDate = editBlogPostRequest.PublishedDate,
+                UrlHandle = editBlogPostRequest.UrlHandle,
+                Visible = editBlogPostRequest.Visible,
+            };
+
+            //Map tags into domain model
+            var selectedTags = new List<Tag>();
+            foreach (var selectedTag in editBlogPostRequest.SelectedTags)
+            {
+                if (Guid.TryParse(selectedTag, out var tag))
+                {
+                    var foundTag = await tagRepository.GetAsync(tag);
+
+                    if (foundTag != null)
+                    {
+                        selectedTags.Add(foundTag);
+                    }
+                }
+            }
+
+            blogPostDomainModel.Tags = selectedTags;
+
+            var updatedBlog= await blogPostRepository.UpdateAsync(blogPostDomainModel);
+
+            if (updatedBlog != null)
+            {
+                return RedirectToAction("Edit");
+            }
+
+            return RedirectToAction("Edit");
+        }
     }
 }
